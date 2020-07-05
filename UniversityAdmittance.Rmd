@@ -5,7 +5,7 @@ date: "6 July 2020"
 output: 
   prettydoc::html_pretty:
     theme: hpstr
-    highlight: vignette
+    highlight: github
     toc: true
     number_sections: true
     df_print: paged
@@ -142,7 +142,11 @@ summary(backward)
 $$ Chance of admittance = -1.2800138 + 0.0018528(GRE Score) + 0.0028072(TOEFL Score) + 0.0064279(University Rating) + 0.0172873(LOR) + 0.1189994(CGPA) + 0.0243538(Research) $$
 
 ## Significance based on p value:
-All predictors have p value of less than 0.05 except for University Rating (0.069363). This shows that University Rating has the least significance compared to all the other 5 predictors. Logically, this may seem plausible because although it's true that a university with a higher rating (or ranking) makes it harder for a student to get admitted through their more rigorous admittance process such as interviews and GPA cut-off, it is not always the case. 
+H0: Predictors do not have significance in predicting target (chance of admittance)
+H1: Predictors have significance in predicting target (chance of admittance)
+When p value is lower than 0.05, do not accept H0.
+
+All predictors have p value of less than 0.05 except for University Rating (0.069363). This shows that University Rating does not have significance as opposed to all the other 5 predictors in predicting chance of admittance. Logically, this may seem plausible because although it's true that a university with a higher rating (or ranking) makes it harder for a student to get admitted through their more rigorous admittance process such as interviews and GPA cut-off, it is not always the case. 
 
 For example:
 According to this website: https://ingeniusprep.com/blog/college-acceptance-rates/, New York University is ranked 29 and has an acceptance rate of 14.5%, whereas University of Notre Dame is ranked much higher at 15 but has a higher acceptance rate of 15.4%. This may stem from the better reputation that NYU has compared to University of Notre Dame, allowing it to exercise a more stringent and rigorous admittance process. Although the above example is mainly for undergraduate programmes, it is likely to be the same with graduate programmes.
@@ -164,7 +168,11 @@ Brief conclusion based on the summary:
 $$ Chance of admittance = -1.3357018 + 0.0018892(GRE Score) + 0.0030174(TOEFL Score) + 0.0193203(LOR) + 0.1229798(CGPA) + 0.0251649(Research) $$ 
 
 ##Significance of predictors
-All predictors have p value of much less than 0.05, making all predictors to be significant.
+H0: Predictors do not have significance in predicting target (chance of admittance)
+H1: Predictors have significance in predicting target (chance of admittance)
+When p value is lower than 0.05, do not accept H0.
+
+Since all predictors have p value of much less than 0.05, all predictors are said to be significant in predicting chance of admittance.
 
 #Predicting of future data
 
@@ -251,5 +259,23 @@ This is because when predictors have multi-collinearity, it is redundant to incl
 Other than this reason, it may even cause a confusing and ambiguous data because the reliability of the data predicted can be interfered by X and Y's collinearity.
 
 #Final model + conclusion
+Based on our checks, it can be said that our model is not up to standard as it only fulfills 1 out of the 3 assumptions, despite fulfilling the checks for errors and goodness of fit.
+
+```{r}
+shapiro.test(backward$residuals)
+bptest(backward)
+```
+
+I have also checked the base model against these tests and found out that it, too, had failed 2 out of the 3 assumption checks. Though it fared better for the Breusch-Pagan test, it fared worse for the Shapiro-Wilk test.
+
+Assuming that this base model and the model I constructed are the two best models we can make out of this dataset since the base model had the least AIC and the model I constructed had the most sense in regard to the problem we are dealing, I can conclude that there is no better model that could have achieved the 3 assumption checks while simultaneously following the narrative that we are aiming for. In addition, too much time will be spent if I were to try every combination of predictors and redo all the assumption tests.
+
+One possible way to make this model a better model is to add more data to the data set. With more data, more can be accurately gauged by the model, leading to even more reliable predicted data.
+
+With that being said, while it is important to constantly tweak a model in order to bring out the best possible outcome, it is vital to understand that no prediction can be 100% accurate and no model can ever be flawless. After all, life is as such and no amount of computation will be robust enough to predict a target completely accurately.
+
+
+
+
 
 
