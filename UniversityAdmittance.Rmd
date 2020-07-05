@@ -1,0 +1,249 @@
+---
+title: "University Acceptance Regression Model"
+author: "Valencia Lie"
+date: "6 July 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem at hand:
+This data set is taken from kaggle.com and contains several parameters which are considered important during the application for Masters Programs.
+The parameters included are :
+
+GRE Scores ( out of 340 )
+TOEFL Scores ( out of 120 )
+University Rating ( out of 5 )
+Statement of Purpose and Letter of Recommendation Strength ( out of 5 )
+Undergraduate GPA ( out of 10 )
+Research Experience ( either 0 or 1 )
+Chance of Admit ( ranging from 0 to 1 )
+
+In the report below, I will attempt to predict the chance of admittance of a student based on some of these parameters using regression model and will check how reliable my model is in predicting an outcome.
+
+# Structure of this report
+1. Importing dataset and cleansing 
+2. Exploratory data analysis: to check correlation between these predictors and target (chance of admittance)
+3. Base model (step-wise regression)
+4. Building a proper model from the base model
+5. Predicting future data
+6. Check for errors, goodness of fit and violation of assumption
+7. Final model + conclusion
+
+
+# 1. Importing dataset and cleansing
+```{r}
+library(tidyverse)
+library(lmtest)
+library(MLmetrics)
+library(GGally)
+library(ggplot2)
+```
+
+```{r}
+university <- read_csv("datasets_14872_228180_Admission_Predict_Ver1.1.csv")
+```
+
+```{r}
+glimpse(university)
+anyNA(university)
+```
+
+
+```{r}
+university <- university %>% 
+  select(- `Serial No.`) %>% 
+  mutate(`Research` = as.factor(`Research`))
+str(university)
+```
+
+#2. Exploratory Data Analysis
+```{r}
+ggcorr(university, label = T)
+```
+From the above diagram, we can tell that generally all predictors have a high positive correlation with the target (chance of admittance). However, the biggest seem to lie on Undergraduate GPA (0.9), followed by TOEFL score and GRE score (both 0.8).
+
+Since the above diagram includes only numeric predictors, we will begin EDA for our one and only predictor that has a data type of factor.
+
+```{r}
+university %>% 
+  group_by(`Research`) %>% 
+  summarise(average_admit = mean(`Chance of Admit`)) %>% 
+  ggplot(aes(x = `Research`, y = average_admit)) +
+  geom_col(aes(fill = average_admit)) +
+  labs(title = "Average chance of admittance score based on whether the student did research before or not",
+       x = "Research (1 for yes, 0 for no)",
+       y = "Average chance of admittance score",
+       fill = "") 
+```
+From the above bar graph, we can see that when a student had research experience before, he/she has a higher average admittance chance compared to a student with no research experience before. Logically speaking, this makes sense because universities emphasise a lot on research, especially for a prestigious masters programme. Hence, an experience in research becomes a defining factor in a pool of equally talented students. 
+
+#3. Base model (step-wise regression model)
+## Backward regression model
+```{r}
+model_all <- lm(formula = `Chance of Admit` ~., university)
+model_all
+backward <- step(model_all, direction = "backward")
+```
+From the above, we can see that since the AIC is a negative value to begin with, the higher the absolute value (the more negative the loss in information), the better, and hence we are left with 6 predictors:
+- University Rating
+- TOEFL Score
+- Research
+- GRE Score
+- LOR
+- CGPA
+with AIC of -2807.59
+
+##Forward regression model 
+```{r}
+model_none <- lm(formula = `Chance of Admit` ~ 1, university)
+forward <- step(model_none, direction = 'forward', scope = list(lower = model_none, upper = model_all))
+```
+For the forward model, we are left with the same 6 predictors too:
+- CGPA 
+- GRE Score 
+- LOR
+- Research
+- TOEFL Score
+- University Rating
+with AIC of -2807.59
+
+## Both forward and backward regression model
+
+```{r}
+both <- step(object = model_all, direction = "both", scope = list(lower = model_none, upper = model_all))
+```
+
+For the both model, we are left with 6 predictors too:
+- GRE Score
+- TOEFL Score 
+- University Rating
+- LOR 
+- CGPA
+- Research
+with AIC of -2807.59
+
+Overall, comparing all three base models, all have the same AIC and same 6 predictors. Hence, for simplicity sake, we will move forward with the backward model.
+
+```{r}
+summary(backward)
+```
+
+## Formula:
+
+$$ Chance of admittance = -1.2800138 + 0.0018528(GRE Score) + 0.0028072(TOEFL Score) + 0.0064279(University Rating) + 0.0172873(LOR) + 0.1189994(CGPA) + 0.0243538(Research) $$
+
+## Significance based on p value:
+All predictors have p value of less than 0.05 except for University Rating (0.069363). This shows that University Rating has the least significance compared to all the other 5 predictors. Logically, this may seem plausible because although it's true that a university with a higher rating (or ranking) makes it harder for a student to get admitted through their more rigorous admittance process such as interviews and GPA cut-off, it is not always the case. 
+
+For example:
+According to this website: https://ingeniusprep.com/blog/college-acceptance-rates/, New York University is ranked 29 and has an acceptance rate of 14.5%, whereas University of Notre Dame is ranked much higher at 15 but has a higher acceptance rate of 15.4%. This may stem from the better reputation that NYU has compared to University of Notre Dame, allowing it to exercise a more stringent and rigorous admittance process. Although the above example is mainly for undergraduate programmes, it is likely to be the same with graduate programmes.
+
+## Goodness of fit
+This model has a multiple R-squared of 0.8219 and an adjusted R-squared of 0.8197. Since this is above 70%, this model is generally said to have a good fit.
+
+# 4. Building a proper model from the base model
+From the above insight, I decided to use the same predictors from the backward model except for University rating in order to predict the chance of acceptance of students into the graduate programme.
+
+```{r}
+proper_model <- lm(`Chance of Admit` ~ `GRE Score` + `TOEFL Score` + LOR + CGPA + Research, university)
+summary(proper_model)
+```
+
+Brief conclusion based on the summary:
+
+## Formula
+$$ Chance of admittance = -1.3357018 + 0.0018892(GRE Score) + 0.0030174(TOEFL Score) + 0.0193203(LOR) + 0.1229798(CGPA) + 0.0251649(Research) $$ 
+
+##Significance of predictors
+All predictors have p value of much less than 0.05, making all predictors to be significant.
+
+# 5. Predicting of future data
+
+Predicting using a 95% confidence level,
+```{r}
+university$prediction <- predict(proper_model, newdata = university, level = 0.95)
+university
+```
+
+#6. Check for errors, goodness of fit and violation of assumption
+
+##Calculation of RMSE and range of actual data
+```{r}
+x = RMSE(y_pred = university$prediction, y_true = university$`Chance of Admit`)
+y = range(university$prediction)[1]
+x
+y
+```
+
+```{r}
+y+x
+y-x
+```
+
+Based on the calculation above, we can conclude that the RMSE (root mean square error) is 0.05971111. Since the lowest actual chance of admittance is 0.4263153 and the RMSE calculated is still much smaller than that, making the difference in the actual and predicted data to be very small, it can be concluded that this model is generally reliable in predicting future data.
+
+## Goodness of fit
+This model has a multiple R-squared of 0.8207 and an adjusted R-squared of 0.8188 and since the general threshold for a model with good fit is an R-squared of 70%, this model can be said to have a good fit.
+
+##Checking for violation of assumption
+### Normality in distribution of error
+
+```{r}
+hist(proper_model$residuals)
+```
+From the above histogram, we can tell that the errors of the model generally follow a bell-curved shape distribution, which is what we call normal distribution. However, to be more sure of this finding, I will further calculate using Shapiro-Wilk test.
+
+Shapiro-Wilk hypothesis:
+H0: The model's errors follow a normal distribution
+H1: The model's error does not follow a normal distribution
+
+```{r}
+shapiro.test(proper_model$residuals)
+```
+
+Since p-value < 0.05, I must reject H0 and accept H1. Hence, this model's error does not follow a normal distribution.
+
+#### Why must the errors of a model follow a normal distribution?
+When errors of a model follow a standard normal distribution, its mean will be at 0 and the majority of the data of the error will be close to 0, making the model more reliable as the error will statistically be close to 0. Hence, we will try to make sure that the errors of our model follow a close resemblance of a normal distribution.
+
+### Homoscedasticity
+
+```{r}
+plot(x = proper_model$fitted.values, y = proper_model$residuals)
+abline(h = 0, col = 'red')
+```
+From this scatter plot, it is hard for us to tell whether the points are random and follow the assumption of homoscedasticity. Hence, we will try to calculate using Breusch-Pagan test.
+
+```{r}
+bptest(proper_model)
+```
+
+Breusch-Pagan test hypothesis:
+- H0: Homoscedasticity
+- H1: Heteroscedasticity
+
+Since the p-value calculated is < 0.05, we must reject H0 and accept H1, meaning that it is heteroscedastic. 
+
+#### Why must our model fulfill the assumption of being homoscedasticity?
+When our model fulfills the assumption of being homoscedasticity, the scatter plot of our model's predicted value against our model's errors will not exhibit any pattern and will be random. This is needed because if it exhibits a pattern, it is likely that an improvement can be made to our model because the errors may not be considered random. Once the errors are completely random (and hence we cannot further predict them) is when our model is truly effective and reliable in predicting future data.
+
+### No multi-collinearity
+```{r}
+#From `car` package, calculated using R studio cloud since my R version is too low to support `car`
+vif(proper_model)
+```
+GRE.Score TOEFL.Score         LOR        CGPA    Research 
+   4.452473    3.799455    1.704623    4.376495    1.486588
+   
+Since the VIF for all the predictors are below 10, it can be said that these predictors generally have no multi-collinearity. 
+
+#### Why must predictors have no multi-collinearity?
+This is because when predictors have multi-collinearity, it is redundant to include both predictors in the first place. For example, if X is collinear with Y and both are used to predict Z (target), it is redundant to use X and Y together as X can be used to predict both Y (due to their collinearity) and Z alone. 
+Other than this reason, it may even cause a confusing and ambiguous data because the reliability of the data predicted can be interfered by X and Y's collinearity.
+
+#7. Final model + conclusion
+
+
