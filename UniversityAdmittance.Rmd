@@ -2,38 +2,44 @@
 title: "University Acceptance Regression Model"
 author: "Valencia Lie"
 date: "6 July 2020"
-output: html_document
+output: 
+  prettydoc::html_pretty:
+    theme: hpstr
+    highlight: vignette
+    toc: true
+    number_sections: true
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Problem at hand:
+# Problem at hand
 This data set is taken from kaggle.com and contains several parameters which are considered important during the application for Masters Programs.
 The parameters included are :
 
-GRE Scores ( out of 340 )
-TOEFL Scores ( out of 120 )
-University Rating ( out of 5 )
-Statement of Purpose and Letter of Recommendation Strength ( out of 5 )
-Undergraduate GPA ( out of 10 )
-Research Experience ( either 0 or 1 )
-Chance of Admit ( ranging from 0 to 1 )
+- GRE Scores ( out of 340 )
+- TOEFL Scores ( out of 120 )
+- University Rating ( out of 5 )
+- Statement of Purpose and Letter of Recommendation Strength ( out of 5 )
+- Undergraduate GPA ( out of 10 )
+- Research Experience ( either 0 or 1 )
+- Chance of Admit ( ranging from 0 to 1 )
 
 In the report below, I will attempt to predict the chance of admittance of a student based on some of these parameters using regression model and will check how reliable my model is in predicting an outcome.
 
 # Structure of this report
-1. Importing dataset and cleansing 
-2. Exploratory data analysis: to check correlation between these predictors and target (chance of admittance)
-3. Base model (step-wise regression)
-4. Building a proper model from the base model
-5. Predicting future data
-6. Check for errors, goodness of fit and violation of assumption
-7. Final model + conclusion
+- Importing dataset and cleansing 
+- Exploratory data analysis: to check correlation between these predictors and target (chance of admittance)
+- Base model (step-wise regression)
+- Building a proper model from the base model
+- Predicting future data
+- Check for errors, goodness of fit and violation of assumption
+- Final model + conclusion
 
 
-# 1. Importing dataset and cleansing
+#Importing dataset and cleansing
 ```{r}
 library(tidyverse)
 library(lmtest)
@@ -59,7 +65,7 @@ university <- university %>%
 str(university)
 ```
 
-#2. Exploratory Data Analysis
+#Exploratory Data Analysis
 ```{r}
 ggcorr(university, label = T)
 ```
@@ -80,7 +86,7 @@ university %>%
 ```
 From the above bar graph, we can see that when a student had research experience before, he/she has a higher average admittance chance compared to a student with no research experience before. Logically speaking, this makes sense because universities emphasise a lot on research, especially for a prestigious masters programme. Hence, an experience in research becomes a defining factor in a pool of equally talented students. 
 
-#3. Base model (step-wise regression model)
+#Base model (step-wise regression model)
 ## Backward regression model
 ```{r}
 model_all <- lm(formula = `Chance of Admit` ~., university)
@@ -144,7 +150,7 @@ According to this website: https://ingeniusprep.com/blog/college-acceptance-rate
 ## Goodness of fit
 This model has a multiple R-squared of 0.8219 and an adjusted R-squared of 0.8197. Since this is above 70%, this model is generally said to have a good fit.
 
-# 4. Building a proper model from the base model
+#Building a proper model from the base model
 From the above insight, I decided to use the same predictors from the backward model except for University rating in order to predict the chance of acceptance of students into the graduate programme.
 
 ```{r}
@@ -160,7 +166,7 @@ $$ Chance of admittance = -1.3357018 + 0.0018892(GRE Score) + 0.0030174(TOEFL Sc
 ##Significance of predictors
 All predictors have p value of much less than 0.05, making all predictors to be significant.
 
-# 5. Predicting of future data
+#Predicting of future data
 
 Predicting using a 95% confidence level,
 ```{r}
@@ -168,7 +174,7 @@ university$prediction <- predict(proper_model, newdata = university, level = 0.9
 university
 ```
 
-#6. Check for errors, goodness of fit and violation of assumption
+#Check for errors, goodness of fit and violation of assumption
 
 ##Calculation of RMSE and range of actual data
 ```{r}
@@ -233,7 +239,7 @@ When our model fulfills the assumption of being homoscedasticity, the scatter pl
 ### No multi-collinearity
 ```{r}
 #From `car` package, calculated using R studio cloud since my R version is too low to support `car`
-vif(proper_model)
+#vif(proper_model)
 ```
 GRE.Score TOEFL.Score         LOR        CGPA    Research 
    4.452473    3.799455    1.704623    4.376495    1.486588
@@ -244,6 +250,6 @@ Since the VIF for all the predictors are below 10, it can be said that these pre
 This is because when predictors have multi-collinearity, it is redundant to include both predictors in the first place. For example, if X is collinear with Y and both are used to predict Z (target), it is redundant to use X and Y together as X can be used to predict both Y (due to their collinearity) and Z alone. 
 Other than this reason, it may even cause a confusing and ambiguous data because the reliability of the data predicted can be interfered by X and Y's collinearity.
 
-#7. Final model + conclusion
+#Final model + conclusion
 
 
