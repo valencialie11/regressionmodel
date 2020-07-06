@@ -187,7 +187,7 @@ university
 ##Calculation of RMSE and range of actual data
 ```{r}
 x = RMSE(y_pred = university$prediction, y_true = university$`Chance of Admit`)
-y = range(university$prediction)[1]
+y = range(university$`Chance of Admit`)[1]
 x
 y
 ```
@@ -197,7 +197,7 @@ y+x
 y-x
 ```
 
-Based on the calculation above, we can conclude that the RMSE (root mean square error) is 0.05971111. Since the lowest actual chance of admittance is 0.4263153 and the RMSE calculated is still much smaller than that, making the difference in the actual and predicted data to be very small, it can be concluded that this model is generally reliable in predicting future data.
+Based on the calculation above, we can conclude that the RMSE (root mean square error) is 0.05971111. Since the lowest actual chance of admittance is 0.34 and the RMSE calculated is still much smaller than that, making the difference in the actual and predicted data to be very small, it can be concluded that this model is generally reliable in predicting future data.
 
 ## Goodness of fit
 This model has a multiple R-squared of 0.8207 and an adjusted R-squared of 0.8188 and since the general threshold for a model with good fit is an R-squared of 70%, this model can be said to have a good fit.
@@ -268,11 +268,41 @@ bptest(backward)
 
 I have also checked the base model against these tests and found out that it, too, had failed 2 out of the 3 assumption checks. Though it fared better for the Breusch-Pagan test, it fared worse for the Shapiro-Wilk test.
 
-Assuming that this base model and the model I constructed are the two best models we can make out of this dataset since the base model had the least AIC and the model I constructed had the most sense in regard to the problem we are dealing, I can conclude that there is no better model that could have achieved the 3 assumption checks while simultaneously following the narrative that we are aiming for. In addition, too much time will be spent if I were to try every combination of predictors and redo all the assumption tests.
+We have seen that our current model is sub-par and tweaking needs to be done. One of the approaches that can be adopted is to shun off the variables that have correlation coefficient above 0.7.
+```{r}
+ggcorr(university, label = T)
+```
+Based on the correlation matrix, unfortunately, all the predictors have strong correlation with other variables. I have tried to tweak the models and it still could not fulfill the 3 assumptions as desired. The closest I could get is by using only LOR as a sole predictor since it has the weakest correlation with other variables.
 
-One possible way to make this model a better model is to add more data to the data set. With more data, more can be accurately gauged by the model, leading to even more reliable predicted data.
+```{r}
+model_final <- lm(`Chance of Admit` ~ LOR, university)
+shapiro.test(model_final$residuals)
+bptest(model_final)
+```
+Although it fulfilled the homoscedasticity test, it could not fulfill the normality test. In addition, its adjusted R squared fared very badly (0.4165) and its RMSE is even higher than with the previous model (0.1077057 vs 0.05971111), making it an equally bad model.
 
-With that being said, while it is important to constantly tweak a model in order to bring out the best possible outcome, it is vital to understand that no prediction can be 100% accurate and no model can ever be flawless. After all, life is as such and no amount of computation will be robust enough to predict a target completely accurately.
+```{r}
+summary(model_final)
+```
+
+```{r}
+university$prediction1 <- predict(object = model_final, university)
+RMSE(y_pred = university$prediction1, y_true = university$`Chance of Admit`)
+range(university$`Chance of Admit`)[1]
+```
+
+All in all, I would still choose to use either the proper model I constructed (not the final model) because it fit the problem we are dealing with the most or the base model because it has the least AIC. I can conclude that there is no better model that could have achieved the 3 assumption checks while simultaneously following the narrative we are aiming for. 
+
+Furthermore, despite both models failing the normality test, I would not be too concerned regarding that because according to this Quora post:
+https://www.quora.com/What-are-some-general-ways-to-improve-multiple-linear-regression-models,
+
+"With sample sizes(Data) smaller than 15 the accuracy of the p-value is sensitive non-normal residuals errors. As sample sizes increase(>>15), the normality assumption for the residuals is not needed. More precisely, if we consider repeated sampling from our population, for large sample sizes, the distribution (across repeated samples) of the ordinary least squares estimates of the regression coefficients follow a normal distribution. As a consequence, for moderate to large sample sizes, non-normality of residuals should not adversely affect the usual inferential procedures."
+
+Since our data has way more than 15, it should not be much of a problem if it does not fulfill the normality assumption. With that being said, one possible way to make this model a better model is to add more data to the data set. With more data, more can be accurately gauged by the model, leading to even more reliable predicted data.
+
+In addition, regarding the homoscedasticity assumption, although the Breusch Pagan test revealed both models to be heteroscedastic, the scatter plot indicates no distinct pattern, making it ever so difficult for us to correct the model.
+
+While it is important to constantly tweak a model in order to bring out the best possible outcome, it is vital to understand that no prediction can be 100% accurate and no model can ever be flawless. After all, life is as such and no amount of computation will be robust enough to predict a real-life target completely accurately.
 
 
 
