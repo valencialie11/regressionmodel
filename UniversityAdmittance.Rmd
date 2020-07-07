@@ -306,6 +306,8 @@ Since our data has way more than 15, it should not be much of a problem if it do
 
 In addition, regarding the homoscedasticity assumption, although the Breusch Pagan test revealed both models to be heteroscedastic, the scatter plot indicates no distinct pattern, making it ever so difficult for us to correct the model.
 
+It is also, perhaps, worthy to note that regression model may not be the best model in predicting this outcome, given its failure to fulfill the 3 major assumptions. Therefore, if we were to tweak this model, it is wiser to use another model all together instead of dwelling too long on making the perfect linear regression model.
+
 While it is important to constantly tweak a model in order to bring out the best possible outcome, it is vital to understand that no prediction can be 100% accurate and no model can ever be flawless. After all, life is as such and no amount of computation will be robust enough to predict a real-life target completely accurately.
 
 #References
