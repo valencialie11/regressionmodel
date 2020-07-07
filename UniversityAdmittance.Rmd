@@ -69,6 +69,7 @@ str(university)
 ```{r}
 ggcorr(university, label = T)
 ```
+
 From the above diagram, we can tell that generally all predictors have a high positive correlation with the target (chance of admittance). However, the biggest seem to lie on Undergraduate GPA (0.9), followed by TOEFL score and GRE score (both 0.8).
 
 Since the above diagram includes only numeric predictors, we will begin EDA for our one and only predictor that has a data type of factor.
@@ -84,6 +85,7 @@ university %>%
        y = "Average chance of admittance score",
        fill = "") 
 ```
+
 From the above bar graph, we can see that when a student had research experience before, he/she has a higher average admittance chance compared to a student with no research experience before. Logically speaking, this makes sense because universities emphasise a lot on research, especially for a prestigious masters programme. Hence, an experience in research becomes a defining factor in a pool of equally talented students. 
 
 #Base model (step-wise regression model)
@@ -229,6 +231,7 @@ When errors of a model follow a standard normal distribution, its mean will be a
 plot(x = proper_model$fitted.values, y = proper_model$residuals)
 abline(h = 0, col = 'red')
 ```
+
 From this scatter plot, it is hard for us to tell whether the points are random and follow the assumption of homoscedasticity. Hence, we will try to calculate using Breusch-Pagan test.
 
 ```{r}
@@ -272,6 +275,7 @@ We have seen that our current model is sub-par and tweaking needs to be done. On
 ```{r}
 ggcorr(university, label = T)
 ```
+
 Based on the correlation matrix, unfortunately, all the predictors have strong correlation with other variables. I have tried to tweak the models and it still could not fulfill the 3 assumptions as desired. The closest I could get is by using only LOR as a sole predictor since it has the weakest correlation with other variables.
 
 ```{r}
@@ -303,6 +307,10 @@ Since our data has way more than 15, it should not be much of a problem if it do
 In addition, regarding the homoscedasticity assumption, although the Breusch Pagan test revealed both models to be heteroscedastic, the scatter plot indicates no distinct pattern, making it ever so difficult for us to correct the model.
 
 While it is important to constantly tweak a model in order to bring out the best possible outcome, it is vital to understand that no prediction can be 100% accurate and no model can ever be flawless. After all, life is as such and no amount of computation will be robust enough to predict a real-life target completely accurately.
+
+#References
+https://www.quora.com/What-are-some-general-ways-to-improve-multiple-linear-regression-models
+https://ingeniusprep.com/blog/college-acceptance-rates/
 
 
 
